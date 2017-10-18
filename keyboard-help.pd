@@ -1,0 +1,25 @@
+#N canvas 340 136 1137 543 10;
+#X obj 239 160 print note;
+#X obj 436 19 notein;
+#X text 546 322 Its possible to play with the mouse click \; mouse
+drag and keyboard (if enabled).;
+#X text 142 243 To create the object uses [keyboard] \; The constructor
+accepts 4 parameters: \; - Width \; - Height \; - Octaves \; - First
+C \; All these values can be configured latter.;
+#X text 544 254 The lowe case zsxdcvgbhnjm play the first octave \;
+The up case ZSXDCVGBHNJM play the second octave;
+#X text 753 417 By Flavio Schiavoni;
+#X text 546 289 An extra parameter in properties enable / disable \;
+the computer keyboard playing.;
+#X text 142 338 The width and height may be ajusted automatically \;
+The C value can be 0 12 24 36 48 60 .... \; If other value is passed
+the object will round \; it to the lower next C.;
+#X obj 243 71 keyboard 399 80 3 48 1;
+#X text 547 353 KNOW BUG: The computer keyboard buffer is not disabled.
+\; It can creates a serie of notes on and off if a key is \; pressed
+and not released.;
+#X obj 631 160 print velocity;
+#X connect 1 0 8 0;
+#X connect 1 1 8 1;
+#X connect 8 0 0 0;
+#X connect 8 1 10 0;
