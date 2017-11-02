@@ -28,8 +28,7 @@ typedef struct _keyboard {
     t_int first_c;
     t_float space;
     t_int keyb_play;
-    t_outlet *note_outlet;
-    t_outlet *velocity_outlet;
+    t_outlet* x_out;
     t_glist *glist;
     t_canvas *canvas;
     t_int *notes; // To store with notes should be played
@@ -88,8 +87,7 @@ void keyboard_destroy(t_keyboard *x) {
 void * keyboard_new(t_floatarg width, t_floatarg height, t_floatarg octaves, t_floatarg first_c, t_floatarg enable_keys){
     t_keyboard *x = (t_keyboard *) pd_new(keyboard_class);
     keyboard_setvalues(x, width, height, octaves, first_c, enable_keys);
-    x->note_outlet = outlet_new(&x->x_obj, &s_float);
-    x->velocity_outlet = outlet_new(&x->x_obj, &s_float);
+    x->x_out = outlet_new(&x->x_obj, &s_list);
     floatinlet_new(&x->x_obj, &x->velocity_input);
 // GUI definitions
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
@@ -131,17 +129,20 @@ static void keyboard_play(t_keyboard* x){
                 sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #9999FF\n", canvas, x, i);
             else
                 sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #6666FF\n", canvas, x, i);
-            outlet_float(x->velocity_outlet, x->notes[i]); //bang velocity
-            outlet_float(x->note_outlet, ((int)x->first_c) + i); //bang note
+            t_atom a[2];
+            SETFLOAT(a, ((int)x->first_c) + i);
+            SETFLOAT(a+1, x->notes[i]);
+            outlet_list(x->x_out, &s_list, 2, a);
         }
         if(x->notes[i] < 0){ // stop play Keyb or mouse
             if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10)
                 sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #FFFFFF\n", canvas, x, i);
             else
                 sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #000000\n", canvas, x, i);
-            outlet_float(x->velocity_outlet, 0); //bang velocity
-            outlet_float(x->note_outlet, ((int)x->first_c) + i); //bang note
-            x->notes[i] = 0;
+            t_atom a[2];
+            SETFLOAT(a, ((int)x->first_c) + i);
+            SETFLOAT(a+1, x->notes[i] = 0);
+            outlet_list(x->x_out, &s_list, 2, a);
         }
     }
 }
@@ -153,8 +154,10 @@ static void keyboard_play(t_keyboard* x){
 void keyboard_note_input(t_keyboard *x, t_floatarg note){
     //Check if this note is part of the Keyboard
     if(note < x->first_c || note > x->first_c + (x->octaves * 12)){
-        outlet_float(x->velocity_outlet, x->velocity_input);
-        outlet_float(x->note_outlet, note);
+        t_atom a[2];
+        SETFLOAT(a, note);
+        SETFLOAT(a+1, x->velocity_input);
+        outlet_list(x->x_out, &s_list, 2, a);
     }
     else{
         x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
