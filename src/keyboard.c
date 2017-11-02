@@ -34,16 +34,16 @@ typedef struct _keyboard{
 } t_keyboard;
 
 // Set Properties
-static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg height, 
+static void keyboard_setvalues(t_keyboard *x, t_floatarg space, t_floatarg height,
         t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     x->keyb_play = keyb_play;
-    x->height = (height > 10) ? height : 80;
-    x->octaves = (octaves > 0) ? octaves : 1;
+    x->height = (height > 10) ? height : 10;
+    x->octaves = (octaves > 1) ? octaves : 1;
     x->low_c = (low_c >= 0) ? low_c : 0;
     x->low_c = (low_c <= 8) ? low_c : 8;
     x->first_c = ((int)(x->low_c * 12)) + 12;
-    t_float space = width / (7 * x->octaves);
-    x->space = (space > 3) ? space : 16;
+//    t_float space = width / (7 * x->octaves);
+    x->space = (space > 7) ? space : 7;
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
     x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
     int i;
@@ -307,10 +307,10 @@ static void keyboard_draw(t_keyboard *x){
 }
 
 // Apply the changes of property windows
-static void keyboard_apply(t_keyboard *x, t_floatarg width, t_floatarg height,
+static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
                            t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     keyboard_erase(x);
-    keyboard_setvalues(x, width, height, octaves, low_c, keyb_play);
+    keyboard_setvalues(x, space, height, octaves, low_c, keyb_play);
     keyboard_draw(x);
 }
 
@@ -414,7 +414,7 @@ void keyboard_properties(t_gobj *z, t_glist *owner){
     t_keyboard *x = (t_keyboard *)z;
     char cmdbuf[256];
     sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d %d\n", 
-        (int)x->width, 
+        (int)x->space,
         (int)x->height, 
         (int)x->octaves,
         (int)x->low_c,
@@ -427,7 +427,7 @@ static void keyboard_save(t_gobj *z, t_binbuf *b){
    binbuf_addv(b, "ssiisiiiii",gensym("#X"),gensym("obj"),
         (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
         gensym("keyboard"),
-        (t_int)x->width,
+        (t_int)x->space,
         (t_int)x->height,
         (t_int)x->octaves,
         (t_int)x->low_c,
@@ -461,13 +461,13 @@ void keyboard_free(t_keyboard *x) {
 // New
 void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     t_keyboard *x = (t_keyboard *) pd_new(keyboard_class);
-    t_float init_width = 450;
+    t_float init_space = 16;
     t_float init_height = 80;
     t_float init_8ves = 4;
     t_float init_low_c = 3;
     t_int init_computer_play = 0;
     if(ac) // 1st ARGUMENT IS WIDTH
-        init_width = atom_getfloat(av++), ac--;
+        init_space = atom_getfloat(av++), ac--;
     if(ac) // 2nd ARGUMENT IS HEIGHT
         init_height = atom_getfloat(av++), ac--;
     if(ac) // 3rd ARGUMENT IS Octaves
@@ -479,7 +479,7 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     x->x_out = outlet_new(&x->x_obj, &s_list);
     floatinlet_new(&x->x_obj, &x->velocity_input);
 // Set Parameters
-    keyboard_setvalues(x, init_width, init_height, init_8ves, init_low_c, init_computer_play);
+    keyboard_setvalues(x, init_space, init_height, init_8ves, init_low_c, init_computer_play);
 // GUI definitions
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
     
@@ -560,7 +560,7 @@ void keyboard_setup(void) {
 
     sys_gui("frame $id.size\n");
     sys_gui("pack $id.size -side top\n");
-    sys_gui("label $id.size.lwidth -text \"Width:\"\n");
+    sys_gui("label $id.size.lwidth -text \"Key Width:\"\n");
     sys_gui("entry $id.size.width -textvariable $var_width -width 7\n");
     sys_gui("label $id.size.lheight -text \"Height:\"\n");
     sys_gui("entry $id.size.height -textvariable $var_height -width 7\n");

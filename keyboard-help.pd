@@ -21,7 +21,7 @@
 #X obj 167 373 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10
 -228856 -1 -1 0 256;
 #X obj 62 373 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10
--228856 -1 -1 53 256;
+-228856 -1 -1 70 256;
 #X text 58 390 MIDI Note;
 #X text 166 389 Velocity;
 #X obj 157 147 tgl 15 0 empty empty empty 17 7 0 10 -228856 -1 -1 0
@@ -41,17 +41,14 @@
 ;
 #X text 227 506 - MIDI Note and Velocity values;
 #X text 139 507 list <f \, f>;
-#X text 113 538 1) float - width in pixels (default 450);
 #X text 113 556 2) float - height in pixels (default 80);
 #X text 113 574 3) float - number of octaves (default 4);
-#X text 113 611 5) float - computer input on <1> or off <0> (default
-0);
 #N canvas 726 321 511 259 computer 0;
 #X text 64 60 - The lower case keys: zsxdcvgbhnjm play the first octave
 \; - The upper case keys: ZSXDCVGBHNJM play the second octave;
 #X text 66 38 If the computer input is enabled (as in below) \, then:
 ;
-#X obj 38 123 else/keyboardi 448 80 4 48 1;
+#X obj 38 123 else/keyboardi 16 80 4 3 1;
 #X restore 410 382 pd computer input;
 #X obj 305 5 cnv 15 250 40 empty empty empty 12 13 0 18 -128992 -233080
 0;
@@ -72,15 +69,18 @@
 #X restore 304 4 graph;
 #X text 42 90 [keyboard] is a GUI that receives MIDI notes and also
 generates them from mouse clicking \, but you can also set it to respond
-to your computer's keyboard. Right click it for properties!, f 63
+to your computer's keyboard. Right click it for properties!, f 64
 ;
-#X obj 62 252 keyboard 448 80 4 3 0;
 #X text 113 592 4) float - C# number of lowest C (default 3 - C3);
+#X obj 62 255 keyboard 16 80 4 3 0;
+#X text 113 538 1) float - white key width in pixels (default 16);
+#X text 113 610 5) float - computer input on <1> or off <0> (default
+0);
 #X connect 9 0 11 0;
 #X connect 9 1 10 0;
 #X connect 14 0 16 0;
-#X connect 15 0 42 0;
-#X connect 15 1 42 1;
+#X connect 15 0 41 0;
+#X connect 15 1 41 1;
 #X connect 16 0 17 0;
 #X connect 17 0 15 0;
-#X connect 42 0 9 0;
+#X connect 41 0 9 0;
