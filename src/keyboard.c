@@ -30,7 +30,7 @@ typedef struct _keyboard{
     t_int *notes; // To store which notes should be played
 } t_keyboard;
 
-/* ------------------------- Methods ------------------------------*/
+/* ------------------------- Keyboard Play ------------------------------*/
 
 static void keyboard_play(t_keyboard* x){
     t_canvas * canvas = x->canvas;
@@ -61,20 +61,6 @@ static void keyboard_play(t_keyboard* x){
             SETFLOAT(a+1, x->notes[i] = 0);
             outlet_list(x->x_out, &s_list, 2, a);
         }
-    }
-}
-
-void keyboard_float(t_keyboard *x, t_floatarg note){
-    //Check if this note is part of the Keyboard
-    if(note < x->first_c || note > x->first_c + (x->octaves * 12)){
-        t_atom a[2];
-        SETFLOAT(a, note);
-        SETFLOAT(a+1, x->velocity_input);
-        outlet_list(x->x_out, &s_list, 2, a);
-    }
-    else{
-        x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
-        keyboard_play(x);
     }
 }
 
@@ -447,6 +433,34 @@ static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
     keyboard_draw(x);
 }
 
+/* ------------------------- Methods ------------------------------*/
+
+void keyboard_float(t_keyboard *x, t_floatarg note){
+    if(note < x->first_c || note > x->first_c + (x->octaves * 12)){
+        t_atom a[2];
+        SETFLOAT(a, note);
+        SETFLOAT(a+1, x->velocity_input);
+        outlet_list(x->x_out, &s_list, 2, a); // if not part of Keyboard, let it through
+    }
+    else{ // if part of Keyboard, send it to the GUI
+        x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
+        keyboard_play(x);
+    }
+}
+
+static void keyboard_8ves(t_keyboard *x, t_floatarg f){
+    f = (int)(f);
+    if(f > 10)
+        f = 10;
+    if(f < 1)
+        f = 1;
+    if(x->octaves != f){
+        keyboard_erase(x);
+        keyboard_set_properties(x, x->space, x->height, f, x->low_c, x->keyb_play);
+        keyboard_draw(x);
+    }
+}
+
 /* ------------------------ Free / New / Setup ------------------------------*/
 
 // Free
@@ -517,6 +531,7 @@ void keyboard_setup(void) {
         A_GIMME,
         0);
     class_addfloat(keyboard_class, keyboard_float);
+    class_addmethod(keyboard_class, (t_method)keyboard_8ves, gensym("8ves"), A_DEFFLOAT, 0);
 // Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, 0); 
