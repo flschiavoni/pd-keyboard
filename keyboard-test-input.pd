@@ -1,0 +1,57 @@
+#N canvas 448 101 1232 716 10;
+#X text 484 541 Its possible to play with the mouse click \; mouse
+drag and keyboard (if enabled).;
+#X text 860 451 To create the object uses [keyboard] \; The constructor
+accepts 4 parameters: \; - Width \; - Height \; - Octaves \; - First
+C \; All these values can be configured latter.;
+#X text 484 440 The lowe case zsxdcvgbhnjm play the first octave \;
+The up case ZSXDCVGBHNJM play the second octave;
+#X text 691 636 By Flavio Schiavoni;
+#X text 484 508 An extra parameter in properties enable / disable \;
+the computer keyboard playing.;
+#X text 860 546 The width and height may be ajusted automatically \;
+The C value can be 0 12 24 36 48 60 .... \; If other value is passed
+the object will round \; it to the lower next C.;
+#X text 485 572 KNOW BUG: The computer keyboard buffer is not disabled.
+\; It can creates a serie of notes on and off if a key is \; pressed
+and not released.;
+#X obj 428 314 print velocity;
+#X obj 276 119 makenote 127 500;
+#X obj 242 57 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X floatatom 615 152 5 0 0 0 - - -;
+#X floatatom 184 158 5 0 0 0 - - -;
+#X text 739 210 width 476 / height 80 / octaves 4 / first c 48;
+#X floatatom 539 281 5 0 0 0 - - -;
+#X obj 545 339 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X msg 135 141 10 0;
+#X text 740 289 works with list input;
+#X msg 81 143 10 40;
+#X msg 122 223 60 0;
+#X msg 68 225 60 40;
+#X text 159 257 48;
+#X text 644 260 95;
+#X obj 281 49 metro 25;
+#X floatatom 349 48 5 0 0 0 - - -;
+#X floatatom 367 98 5 0 0 0 - - -;
+#X obj 622 318 print;
+#X obj 593 354 PRINT;
+#X obj 280 73 expr random(20 \, 105);
+#X obj 185 291 unpack;
+#X floatatom 220 318 5 0 0 0 - - -;
+#X floatatom 190 353 5 0 0 0 - - -;
+#X text 736 147 keyboard 450 80 4 48 1;
+#N canvas 0 22 754 410 subpatch 1;
+#X obj 91 71 keyboard 448 80 4 48 1;
+#X restore 163 456 pd subpatch;
+#X connect 8 0 11 0;
+#X connect 8 1 10 0;
+#X connect 9 0 22 0;
+#X connect 13 0 14 0;
+#X connect 22 0 27 0;
+#X connect 23 0 22 1;
+#X connect 24 0 8 2;
+#X connect 27 0 8 0;
+#X connect 28 0 30 0;
+#X connect 28 1 29 0;
