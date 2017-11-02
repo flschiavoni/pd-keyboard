@@ -1,55 +1,62 @@
-#N canvas 536 44 1137 543 10;
-#X obj 234 240 print note;
-#X obj 436 19 notein;
-#X text 541 402 Its possible to play with the mouse click \; mouse
+#N canvas 536 44 1132 611 10;
+#X obj 232 299 print note;
+#X text 538 484 Its possible to play with the mouse click \; mouse
 drag and keyboard (if enabled).;
-#X text 137 323 To create the object uses [keyboard] \; The constructor
+#X text 134 405 To create the object uses [keyboard] \; The constructor
 accepts 4 parameters: \; - Width \; - Height \; - Octaves \; - First
 C \; All these values can be configured latter.;
-#X text 539 334 The lowe case zsxdcvgbhnjm play the first octave \;
+#X text 538 383 The lowe case zsxdcvgbhnjm play the first octave \;
 The up case ZSXDCVGBHNJM play the second octave;
-#X text 748 497 By Flavio Schiavoni;
-#X text 541 369 An extra parameter in properties enable / disable \;
+#X text 745 579 By Flavio Schiavoni;
+#X text 538 451 An extra parameter in properties enable / disable \;
 the computer keyboard playing.;
-#X text 137 418 The width and height may be ajusted automatically \;
+#X text 134 500 The width and height may be ajusted automatically \;
 The C value can be 0 12 24 36 48 60 .... \; If other value is passed
 the object will round \; it to the lower next C.;
-#X text 542 433 KNOW BUG: The computer keyboard buffer is not disabled.
+#X text 539 515 KNOW BUG: The computer keyboard buffer is not disabled.
 \; It can creates a serie of notes on and off if a key is \; pressed
 and not released.;
-#X obj 430 255 print velocity;
-#X obj 277 72 makenote 127 500;
-#X obj 283 26 metro 250;
-#X obj 244 34 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#X obj 428 314 print velocity;
+#X obj 276 119 makenote 127 500;
+#X obj 242 57 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
-#X floatatom 426 82 5 0 0 0 - - -;
-#X floatatom 197 74 5 0 0 0 - - -;
-#X obj 282 51 expr random(40 \, 80);
-#X text 741 181 width 476 / height 80 / octaves 4 / first c 48;
-#X floatatom 189 231 5 0 0 0 - - -;
-#X msg 624 220 12;
-#X obj 626 254 mtof;
-#X floatatom 629 285 5 0 0 0 - - -;
-#X text 740 118 keyboard 450 80 4 48 0;
-#X floatatom 541 222 5 0 0 0 - - -;
-#X obj 547 280 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+#X floatatom 615 152 5 0 0 0 - - -;
+#X floatatom 184 158 5 0 0 0 - - -;
+#X text 739 210 width 476 / height 80 / octaves 4 / first c 48;
+#X floatatom 187 290 5 0 0 0 - - -;
+#X text 738 147 keyboard 450 80 4 48 0;
+#X floatatom 539 281 5 0 0 0 - - -;
+#X obj 545 339 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
-#X msg 121 87 10 0;
-#X msg 129 180 10;
-#X text 742 260 works with list input;
-#X msg 117 137 10 40 13;
-#X obj 197 269 mtof;
-#X floatatom 201 298 5 0 0 0 - - -;
-#X obj 186 126 keyboard 448 80 4 48 0;
-#X connect 10 0 14 0;
-#X connect 10 1 13 0;
-#X connect 11 0 15 0;
-#X connect 12 0 11 0;
-#X connect 15 0 10 0;
-#X connect 17 0 28 0;
-#X connect 18 0 19 0;
-#X connect 19 0 20 0;
-#X connect 22 0 23 0;
-#X connect 28 0 29 0;
-#X connect 30 0 17 0;
-#X connect 30 1 22 0;
+#X msg 135 141 10 0;
+#X text 740 289 works with list input;
+#X obj 195 328 mtof;
+#X floatatom 199 357 5 0 0 0 - - -;
+#X obj 184 185 keyboard 448 80 4 48 0;
+#X msg 81 143 10 40;
+#X msg 122 223 60 0;
+#X msg 68 225 60 40;
+#X text 159 257 48;
+#X text 644 260 95;
+#X obj 281 49 metro 25;
+#X floatatom 349 48 5 0 0 0 - - -;
+#X floatatom 367 98 5 0 0 0 - - -;
+#X obj 280 73 expr random(20 \, 35);
+#X connect 9 0 12 0;
+#X connect 9 1 11 0;
+#X connect 10 0 28 0;
+#X connect 11 0 22 1;
+#X connect 12 0 22 0;
+#X connect 14 0 20 0;
+#X connect 16 0 17 0;
+#X connect 18 0 22 0;
+#X connect 20 0 21 0;
+#X connect 22 0 14 0;
+#X connect 22 1 16 0;
+#X connect 23 0 22 0;
+#X connect 24 0 22 0;
+#X connect 25 0 22 0;
+#X connect 28 0 31 0;
+#X connect 29 0 28 1;
+#X connect 30 0 9 2;
+#X connect 31 0 9 0;
