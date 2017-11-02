@@ -57,14 +57,14 @@ static void keyboard_apply(t_keyboard *x, t_floatarg width, t_floatarg height,
 
 //Set the values to the object
 static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg height, 
-        t_floatarg octaves, t_floatarg first_c, t_float keyb_play){
+        t_floatarg octaves, t_floatarg c_1st, t_float keyb_play){
     x->keyb_play = keyb_play;
     x->height = (height > 10) ? height : 80;
     x->octaves = (octaves > 1) ? octaves : 4;
-    x->first_c = (first_c > 0) ? first_c : 48;
-    x->first_c = ((int)(first_c/12)) * 12;
-    t_float space = width / 7 / x->octaves;
-    x->space = (space > 3) ? space : 15;
+    x->first_c = (c_1st > 0) ? c_1st : 48;
+    x->first_c = ((int)(x->first_c / 12)) * 12;
+    t_float space = width / (7 * x->octaves);
+    x->space = (space > 3) ? space : 16;
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
     x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
     int i;
@@ -75,16 +75,13 @@ static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg heigh
 
 // Destroy the class
 void keyboard_destroy(t_keyboard *x) {
-
     sys_vgui("event delete <<%x_mousedown>>\n", x);
     sys_vgui("event delete <<%x_mousemotion>>\n", x);
     sys_vgui("event delete <<%x_mouseup>>\n", x);
     sys_vgui("event delete <<%x_keydown>>\n", x);
     sys_vgui("event delete <<%x_keyup>>\n", x);
-
     pd_unbind(&x->x_obj.ob_pd, gensym("keyboard"));
     gfxstub_deleteforkey(x);
-
 }
 
 // Constructor of the class
@@ -94,8 +91,7 @@ void * keyboard_new(t_floatarg width, t_floatarg height, t_floatarg octaves, t_f
     x->note_outlet = outlet_new(&x->x_obj, &s_float);
     x->velocity_outlet = outlet_new(&x->x_obj, &s_float);
     floatinlet_new(&x->x_obj, &x->velocity_input);
-
-    // GUI definitions
+// GUI definitions
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
 
     sys_vgui("event add <<%x_mousedown>> <ButtonPress>\n", x);
@@ -117,7 +113,6 @@ void * keyboard_new(t_floatarg width, t_floatarg height, t_floatarg octaves, t_f
     sys_vgui("event add <<%x_keyup>> <KeyRelease>\n", x);
     sys_vgui("proc %x_keyboard_keyup {K} {\n pd [concat keyboard _kup $K\\;]\n}\n", x);
     sys_vgui("bind all <<%x_keyup>> {\n %x_keyboard_keyup %%N\n}\n", x, x);
-
     return (void *) x;
 }
 
@@ -516,9 +511,9 @@ void keyboard_setup(void) {
         A_DEFFLOAT,
         A_DEFFLOAT,
         A_DEFFLOAT,
+        A_DEFFLOAT,
         0);//Must always ends with a zero
-
-    // Methods to receive TCL/TK events
+// Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, 0); 
     class_addmethod(keyboard_class, (t_method)keyboard_mousemotion,gensym("_mousemotion"), A_FLOAT, A_FLOAT, 0);
@@ -531,8 +526,6 @@ void keyboard_setup(void) {
     class_setsavefn(keyboard_class, keyboard_save);
     class_setpropertiesfn(keyboard_class, keyboard_properties);
     class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
-
-    class_sethelpsymbol(keyboard_class,gensym("keyboard_help"));
 
     //Adjust from Vanilla e Extended
     sys_gui(" if { [catch {pd}] } {proc pd {args} {pdsend [join $args " "]}}\n");
