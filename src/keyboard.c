@@ -26,6 +26,7 @@ typedef struct _keyboard {
     t_int height;
     t_int octaves;
     t_int first_c;
+    t_int low_c;
     t_float space;
     t_int keyb_play;
     t_outlet* x_out;
@@ -34,34 +35,15 @@ typedef struct _keyboard {
     t_int *notes; // To store with notes should be played
 } t_keyboard;
 
-
-static void keyboard_draw(t_keyboard *x);
-static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg height, 
-        t_floatarg octaves, t_floatarg first_c, t_float keyb_play);
-static void keyboard_apply(t_keyboard *x, t_floatarg width, t_floatarg height, 
-            t_floatarg octaves, t_floatarg first_c, t_float keyb_play);
-static void keyboard_erase(t_keyboard *x);
-static void keyboard_play(t_keyboard* x);
-void keyboard_destroy(t_keyboard *x);
-static int keyboard_mapclick(t_keyboard* x, t_float x_pos, t_float y_pos, t_int event);
-
-
-//Apply the changes of property windows
-static void keyboard_apply(t_keyboard *x, t_floatarg width, t_floatarg height,
-         t_floatarg octaves, t_floatarg first_c, t_float keyb_play){
-    keyboard_erase(x);
-    keyboard_setvalues(x, width, height, octaves, first_c, keyb_play);
-    keyboard_draw(x);
-}
-
 //Set the values to the object
 static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg height, 
-        t_floatarg octaves, t_floatarg c_1st, t_float keyb_play){
+        t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     x->keyb_play = keyb_play;
     x->height = (height > 10) ? height : 80;
-    x->octaves = (octaves > 1) ? octaves : 4;
-    x->first_c = (c_1st > 0) ? c_1st : 48;
-    x->first_c = ((int)(x->first_c / 12)) * 12;
+    x->octaves = (octaves > 0) ? octaves : 1;
+    x->low_c = (low_c >= 0) ? low_c : 0;
+    x->low_c = (low_c <= 8) ? low_c : 8;
+    x->first_c = ((int)(x->low_c * 12)) + 12;
     t_float space = width / (7 * x->octaves);
     x->space = (space > 3) ? space : 16;
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
@@ -70,7 +52,6 @@ static void keyboard_setvalues(t_keyboard *x, t_floatarg width, t_floatarg heigh
     for(i = 0 ; i < 12 * x->octaves ; i++)
         x->notes[i] = 0;
 }
-
 
 // Destroy the class
 void keyboard_destroy(t_keyboard *x) {
@@ -83,10 +64,24 @@ void keyboard_destroy(t_keyboard *x) {
     gfxstub_deleteforkey(x);
 }
 
-// Constructor of the class
-void * keyboard_new(t_floatarg width, t_floatarg height, t_floatarg octaves, t_floatarg first_c, t_floatarg enable_keys){
+void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     t_keyboard *x = (t_keyboard *) pd_new(keyboard_class);
-    keyboard_setvalues(x, width, height, octaves, first_c, enable_keys);
+    t_float init_width = 450;
+    t_float init_height = 80;
+    t_float init_8ves = 4;
+    t_float init_low_c = 3;
+    t_int init_computer_play = 0;
+    if(ac) // 1st ARGUMENT IS WIDTH
+        init_width = atom_getfloat(av++), ac--;
+    if(ac) // 2nd ARGUMENT IS HEIGHT
+        init_height = atom_getfloat(av++), ac--;
+    if(ac) // 3rd ARGUMENT IS Octaves
+        init_8ves = atom_getfloat(av++), ac--;
+    if(ac) // 4th ARGUMENT IS Lowest C ("First C")
+        init_low_c = atom_getfloat(av++), ac--;
+    if(ac) // 5th ARGUMENT IS computer keyboard play enabled
+        init_computer_play = atom_getfloat(av++) != 0, ac--;
+    keyboard_setvalues(x, init_width, init_height, init_8ves, init_low_c, init_computer_play);
     x->x_out = outlet_new(&x->x_obj, &s_list);
     floatinlet_new(&x->x_obj, &x->velocity_input);
 // GUI definitions
@@ -169,20 +164,6 @@ void keyboard_note_input(t_keyboard *x, t_floatarg note){
 /* -------------------- MOUSE Events ----------------------------------*/
 /* --------------------------------------------------------------------*/
 
-// Mouse press
-static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
-    if (x->glist->gl_edit) // If edit mode, give up!
-        return;
-
-    if((int)xpix < x->x_obj.te_xpix + 40
-            || (int)xpix > x->x_obj.te_xpix + x->width + 40
-            || (int)ypix < x->x_obj.te_ypix
-            || (int)ypix > x->x_obj.te_ypix + x->height){
-        return;
-        }
-    keyboard_mapclick(x, xpix, ypix, MOUSE_PRESS);
-    keyboard_play(x);
-}
 
 // Mouse release
 static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix){
@@ -198,30 +179,6 @@ static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix){
     }
     if(play == 1)
         keyboard_play(x);
-}
-
-// Mouse Drag event
-static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix){
-    if (x->glist->gl_edit) // If edit mode, give up!
-        return;
-    if((int)xpix < x->x_obj.te_xpix + 40
-            || (int)xpix > x->x_obj.te_xpix + x->width + 40
-            || (int)ypix < x->x_obj.te_ypix
-            || (int)ypix > x->x_obj.te_ypix + x->height){
-        return;
-        }
-    int i,actual = 0, new_drag = 0;
-    for(i = 0 ; i < x->octaves * 12; i++){//find actual key playing;
-        if(x->notes[i] == MOUSE_PRESS){
-            actual = i;
-            break;
-        }
-    }
-    new_drag = keyboard_mapclick(x, (int)xpix, (int)ypix, MOUSE_PRESS);
-    if(new_drag != -1 && actual != new_drag){
-        x->notes[actual] = MOUSE_RELEASE;
-        keyboard_play(x);
-    }
 }
 
 //Map mouse event position
@@ -255,6 +212,45 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
         }
     }
     return -1;
+}
+
+// Mouse press
+static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
+    if (x->glist->gl_edit) // If edit mode, give up!
+        return;
+    
+    if((int)xpix < x->x_obj.te_xpix + 40
+       || (int)xpix > x->x_obj.te_xpix + x->width + 40
+       || (int)ypix < x->x_obj.te_ypix
+       || (int)ypix > x->x_obj.te_ypix + x->height){
+        return;
+    }
+    keyboard_mapclick(x, xpix, ypix, MOUSE_PRESS);
+    keyboard_play(x);
+}
+
+// Mouse Drag event
+static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix){
+    if (x->glist->gl_edit) // If edit mode, give up!
+        return;
+    if((int)xpix < x->x_obj.te_xpix + 40
+       || (int)xpix > x->x_obj.te_xpix + x->width + 40
+       || (int)ypix < x->x_obj.te_ypix
+       || (int)ypix > x->x_obj.te_ypix + x->height){
+        return;
+    }
+    int i,actual = 0, new_drag = 0;
+    for(i = 0 ; i < x->octaves * 12; i++){//find actual key playing;
+        if(x->notes[i] == MOUSE_PRESS){
+            actual = i;
+            break;
+        }
+    }
+    new_drag = keyboard_mapclick(x, (int)xpix, (int)ypix, MOUSE_PRESS);
+    if(new_drag != -1 && actual != new_drag){
+        x->notes[actual] = MOUSE_RELEASE;
+        keyboard_play(x);
+    }
 }
 
 /* --------------------------------------------------------------------*/
@@ -317,7 +313,7 @@ static void keyboard_erase(t_keyboard *x){
 //Draw the keyboard
 static void keyboard_draw(t_keyboard *x){
     t_canvas * canvas = x->canvas;
-    // Main rectangle
+// Main rectangle
     sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xrr -fill #FFFFFF\n",
         canvas,
         x->x_obj.te_xpix,
@@ -329,7 +325,7 @@ static void keyboard_draw(t_keyboard *x){
 
     int i, wcounter, bcounter;
     wcounter = bcounter = 0;
-    // First draw the white keys to allow the blacks overlay it
+// First draw the white keys to allow the blacks overlay it
     for(i = 0 ; i < x->octaves * 12 ; i++){
         short key = i % 12;
         if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10){
@@ -367,6 +363,14 @@ static void keyboard_draw(t_keyboard *x){
         }
     }
     canvas_fixlinesfor(x->glist, (t_text *)x);
+}
+
+//Apply the changes of property windows
+static void keyboard_apply(t_keyboard *x, t_floatarg width, t_floatarg height,
+                           t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
+    keyboard_erase(x);
+    keyboard_setvalues(x, width, height, octaves, low_c, keyb_play);
+    keyboard_draw(x);
 }
 
 // MAKE VISIBLE OR INVISIBLE
@@ -474,27 +478,25 @@ void keyboard_properties(t_gobj *z, t_glist *owner){
         (int)x->width, 
         (int)x->height, 
         (int)x->octaves,
-        (int)x->first_c,
+        (int)x->low_c,
         (int)x->keyb_play);
     gfxstub_new(&x->x_obj.ob_pd, x, cmdbuf);
 }
 
 static void keyboard_save(t_gobj *z, t_binbuf *b){
     t_keyboard *x = (t_keyboard *)z;
-
    binbuf_addv(b, "ssiisiiiii",gensym("#X"),gensym("obj"),
         (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
         gensym("keyboard"),
         (t_int)x->width,
         (t_int)x->height,
         (t_int)x->octaves,
-        (t_int)x->first_c,
+        (t_int)x->low_c,
         (t_int)x->keyb_play);
    binbuf_addv(b, ";");
 }
 
-t_widgetbehavior keyboard_widgetbehavior =
-{
+t_widgetbehavior keyboard_widgetbehavior ={
     keyboard_getrect,
     keyboard_displace,
     keyboard_select,
@@ -514,11 +516,7 @@ void keyboard_setup(void) {
         (t_method) keyboard_destroy, // Destructor
         sizeof (t_keyboard),
         CLASS_DEFAULT,
-        A_DEFFLOAT,
-        A_DEFFLOAT,
-        A_DEFFLOAT,
-        A_DEFFLOAT,
-        A_DEFFLOAT,
+        A_GIMME,
         0);//Must always ends with a zero
 // Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
@@ -538,24 +536,24 @@ void keyboard_setup(void) {
     sys_gui(" if { [catch {pd}] } {proc pd {args} {pdsend [join $args " "]}}\n");
 
     // Properties dialog
-    sys_gui("proc keyboard_properties {id width height octaves first_c keyb_play} {\n");
+    sys_gui("proc keyboard_properties {id width height octaves low_c keyb_play} {\n");
     sys_gui("set vid [string trimleft $id .]\n");
     sys_gui("set var_width [concat var_width_$vid]\n");
     sys_gui("set var_height [concat var_height_$vid]\n");
     sys_gui("set var_octaves [concat var_octaves_$vid]\n");
-    sys_gui("set var_first_c [concat var_first_c_$vid]\n");
+    sys_gui("set var_low_c [concat var_low_c_$vid]\n");
     sys_gui("set var_keyb_play [concat var_keyb_play_$vid]\n");
 
     sys_gui("global $var_width\n");
     sys_gui("global $var_height\n");
     sys_gui("global $var_octaves\n");
-    sys_gui("global $var_first_c\n");
+    sys_gui("global $var_low_c\n");
     sys_gui("global $var_keyb_play\n");
 
     sys_gui("set $var_width $width\n");
     sys_gui("set $var_height $height\n");
     sys_gui("set $var_octaves $octaves\n");
-    sys_gui("set $var_first_c $first_c\n");
+    sys_gui("set $var_low_c $low_c\n");
     sys_gui("set $var_keyb_play $keyb_play\n");
 
     sys_gui("toplevel $id\n");
@@ -577,9 +575,9 @@ void keyboard_setup(void) {
     sys_gui("pack $id.notes -side top\n");
     sys_gui("label $id.notes.loctaves -text \"Octaves:\"\n");
     sys_gui("entry $id.notes.octaves -textvariable $var_octaves -width 7\n");
-    sys_gui("label $id.notes.lfirst_c -text \"First C:\"\n");
-    sys_gui("entry $id.notes.first_c -textvariable $var_first_c -width 7\n");
-    sys_gui("pack $id.notes.loctaves $id.notes.octaves $id.notes.lfirst_c $id.notes.first_c -side left\n");
+    sys_gui("label $id.notes.llow_c -text \"Low C:\"\n");
+    sys_gui("entry $id.notes.low_c -textvariable $var_low_c -width 7\n");
+    sys_gui("pack $id.notes.loctaves $id.notes.octaves $id.notes.llow_c $id.notes.low_c -side left\n");
 
     sys_gui("frame $id.checkframe\n");
     sys_gui("pack $id.checkframe -side top\n");
@@ -603,20 +601,20 @@ void keyboard_setup(void) {
     sys_gui("set var_width [concat var_width_$vid]\n");
     sys_gui("set var_height [concat var_height_$vid]\n");
     sys_gui("set var_octaves [concat var_octaves_$vid]\n");
-    sys_gui("set var_first_c [concat var_first_c_$vid]\n");
+    sys_gui("set var_low_c [concat var_low_c_$vid]\n");
     sys_gui("set var_keyb_play [concat var_keyb_play_$vid]\n");
 
     sys_gui("global $var_width\n");
     sys_gui("global $var_height\n");
     sys_gui("global $var_octaves\n");
-    sys_gui("global $var_first_c\n");
+    sys_gui("global $var_low_c\n");
     sys_gui("global $var_keyb_play\n");
     // Aply function
     sys_gui("set cmd [concat $id apply \
         [eval concat $$var_width] \
         [eval concat $$var_height] \
         [eval concat $$var_octaves] \
-        [eval concat $$var_first_c] \
+        [eval concat $$var_low_c] \
         [eval concat $$var_keyb_play] \\;]\n");
     sys_gui("pd $cmd\n");
     sys_gui("}\n");
