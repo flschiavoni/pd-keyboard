@@ -153,10 +153,11 @@ static void keyboard_play(t_keyboard* x){
 void keyboard_note_input(t_keyboard *x, t_floatarg note){
     //Check if this note is part of the Keyboard
     if(note < x->first_c || note > x->first_c + (x->octaves * 12)){
-        post("out of range");
+        outlet_float(x->velocity_outlet, x->velocity_input);
+        outlet_float(x->note_outlet, note);
     }
     else{
-        x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0)?x->velocity_input:KEY_UP;
+        x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
         keyboard_play(x);
     }
 }
