@@ -1,4 +1,4 @@
-// Written By Flávio Schiavoni and revised by Porres
+// Written By Flávio Schiavoni and Alexandre Porres
 
 #include <string.h>
 #include <stdio.h>
@@ -13,9 +13,6 @@
 #define KEY_UP -1
 
 static t_class *keyboard_class;
-
-static t_int keyboard_mapping[24] = {122, 115, 120, 100, 99, 118, 103, 98, 104, 110, 106,
-         109, 90, 83, 88, 68, 67, 86, 71, 66, 72, 78, 74, 77};
 
 typedef struct _keyboard{
     t_object x_obj;
@@ -32,24 +29,6 @@ typedef struct _keyboard{
     t_canvas *canvas;
     t_int *notes; // To store which notes should be played
 } t_keyboard;
-
-// Set Properties
-static void keyboard_setvalues(t_keyboard *x, t_floatarg space, t_floatarg height,
-        t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
-    x->keyb_play = keyb_play;
-    x->height = (height > 10) ? height : 10;
-    x->octaves = (octaves > 1) ? octaves : 1;
-    x->low_c = (low_c >= 0) ? low_c : 0;
-    x->low_c = (low_c <= 8) ? low_c : 8;
-    x->first_c = ((int)(x->low_c * 12)) + 12;
-//    t_float space = width / (7 * x->octaves);
-    x->space = (space > 7) ? space : 7;
-    x->width = ((int)(x->space)) * 7 * (int)x->octaves;
-    x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
-    int i;
-    for(i = 0 ; i < 12 * x->octaves ; i++)
-        x->notes[i] = 0;
-}
 
 /* ------------------------- Methods ------------------------------*/
 
@@ -188,6 +167,9 @@ static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix){
 
 /* ------------------------ KEYBOARD events ---------------------------*/
 
+static t_int keyboard_mapping[24] = {122, 115, 120, 100, 99, 118, 103, 98, 104, 110, 106,
+    109, 90, 83, 88, 68, 67, 86, 71, 66, 72, 78, 74, 77};
+
 // Key up event: Stop playing
 static void keyboard_keyup(t_keyboard* x, t_float key){
     if(x->keyb_play == 0)
@@ -217,6 +199,8 @@ static void keyboard_keydown(t_keyboard* x, t_float key){
     if(play == 1)
         keyboard_play(x);
 }
+
+
 
 /* ------------------------ GUI Definitions ---------------------------*/
 
@@ -306,13 +290,6 @@ static void keyboard_draw(t_keyboard *x){
     canvas_fixlinesfor(x->glist, (t_text *)x);
 }
 
-// Apply the changes of property windows
-static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
-                           t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
-    keyboard_erase(x);
-    keyboard_setvalues(x, space, height, octaves, low_c, keyb_play);
-    keyboard_draw(x);
-}
 
 // MAKE VISIBLE OR INVISIBLE
 static void keyboard_vis(t_gobj *z, t_glist *glist, int vis){
@@ -410,29 +387,46 @@ static void keyboard_delete(t_gobj *z, t_glist *glist){
 
 /* ------------------------ GUI Behaviour -----------------------------*/
 
+// Set Properties
+static void keyboard_set_properties(t_keyboard *x, t_floatarg space, t_floatarg height,
+                                    t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
+    x->keyb_play = keyb_play;
+    x->height = (height > 10) ? height : 10;
+    x->octaves = (octaves > 1) ? octaves : 1;
+    x->low_c = (low_c >= 0) ? low_c : 0;
+    x->low_c = (low_c <= 8) ? low_c : 8;
+    x->first_c = ((int)(x->low_c * 12)) + 12;
+    x->space = (space > 7) ? space : 7;
+    x->width = ((int)(x->space)) * 7 * (int)x->octaves;
+    x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
+    int i;
+    for(i = 0; i < 12 * x->octaves; i++)
+        x->notes[i] = 0;
+}
+
 void keyboard_properties(t_gobj *z, t_glist *owner){
     t_keyboard *x = (t_keyboard *)z;
     char cmdbuf[256];
-    sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d %d\n", 
-        (int)x->space,
-        (int)x->height, 
-        (int)x->octaves,
-        (int)x->low_c,
-        (int)x->keyb_play);
+    sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d %d\n",
+            (int)x->space,
+            (int)x->height,
+            (int)x->octaves,
+            (int)x->low_c,
+            (int)x->keyb_play);
     gfxstub_new(&x->x_obj.ob_pd, x, cmdbuf);
 }
 
 static void keyboard_save(t_gobj *z, t_binbuf *b){
     t_keyboard *x = (t_keyboard *)z;
-   binbuf_addv(b, "ssiisiiiii",gensym("#X"),gensym("obj"),
-        (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
-        gensym("keyboard"),
-        (t_int)x->space,
-        (t_int)x->height,
-        (t_int)x->octaves,
-        (t_int)x->low_c,
-        (t_int)x->keyb_play);
-   binbuf_addv(b, ";");
+    binbuf_addv(b, "ssiisiiiii",gensym("#X"),gensym("obj"),
+                (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
+                gensym("keyboard"),
+                (t_int)x->space,
+                (t_int)x->height,
+                (t_int)x->octaves,
+                (t_int)x->low_c,
+                (t_int)x->keyb_play);
+    binbuf_addv(b, ";");
 }
 
 t_widgetbehavior keyboard_widgetbehavior ={
@@ -444,6 +438,14 @@ t_widgetbehavior keyboard_widgetbehavior ={
     keyboard_vis,
     NULL, //Will use PD default mouse click
 };
+
+// Apply the changes of property windows
+static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
+                           t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
+    keyboard_erase(x);
+    keyboard_set_properties(x, space, height, octaves, low_c, keyb_play);
+    keyboard_draw(x);
+}
 
 /* ------------------------ Free / New / Setup ------------------------------*/
 
@@ -479,7 +481,7 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     x->x_out = outlet_new(&x->x_obj, &s_list);
     floatinlet_new(&x->x_obj, &x->velocity_input);
 // Set Parameters
-    keyboard_setvalues(x, init_space, init_height, init_8ves, init_low_c, init_computer_play);
+    keyboard_set_properties(x, init_space, init_height, init_8ves, init_low_c, init_computer_play);
 // GUI definitions
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
     
