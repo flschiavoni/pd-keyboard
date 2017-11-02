@@ -1,25 +1,42 @@
-#N canvas 340 136 1137 543 10;
-#X obj 239 160 print note;
+#N canvas 536 44 1137 543 10;
+#X obj 234 240 print note;
 #X obj 436 19 notein;
-#X text 546 322 Its possible to play with the mouse click \; mouse
+#X text 541 402 Its possible to play with the mouse click \; mouse
 drag and keyboard (if enabled).;
-#X text 142 243 To create the object uses [keyboard] \; The constructor
+#X text 137 323 To create the object uses [keyboard] \; The constructor
 accepts 4 parameters: \; - Width \; - Height \; - Octaves \; - First
 C \; All these values can be configured latter.;
-#X text 544 254 The lowe case zsxdcvgbhnjm play the first octave \;
+#X text 539 334 The lowe case zsxdcvgbhnjm play the first octave \;
 The up case ZSXDCVGBHNJM play the second octave;
-#X text 753 417 By Flavio Schiavoni;
-#X text 546 289 An extra parameter in properties enable / disable \;
+#X text 748 497 By Flavio Schiavoni;
+#X text 541 369 An extra parameter in properties enable / disable \;
 the computer keyboard playing.;
-#X text 142 338 The width and height may be ajusted automatically \;
+#X text 137 418 The width and height may be ajusted automatically \;
 The C value can be 0 12 24 36 48 60 .... \; If other value is passed
 the object will round \; it to the lower next C.;
-#X obj 243 71 keyboard 399 80 3 48 1;
-#X text 547 353 KNOW BUG: The computer keyboard buffer is not disabled.
+#X text 542 433 KNOW BUG: The computer keyboard buffer is not disabled.
 \; It can creates a serie of notes on and off if a key is \; pressed
 and not released.;
-#X obj 631 160 print velocity;
-#X connect 1 0 8 0;
-#X connect 1 1 8 1;
-#X connect 8 0 0 0;
-#X connect 8 1 10 0;
+#X obj 464 247 print velocity;
+#X obj 277 72 makenote 127 500;
+#X obj 283 26 metro 250;
+#X obj 244 34 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+1;
+#X floatatom 426 82 5 0 0 0 - - -;
+#X floatatom 197 74 5 0 0 0 - - -;
+#X obj 282 51 expr random(40 \, 80);
+#X text 741 181 width 476 / height 80 / octaves 4 / first c 48;
+#X text 740 118 keyboard 476 80 4 48 0;
+#X obj 242 144 keyboard 210 80 2 0 1;
+#X floatatom 189 231 5 0 0 0 - - -;
+#X msg 624 220 12;
+#X obj 626 254 mtof;
+#X floatatom 629 285 5 0 0 0 - - -;
+#X connect 10 0 14 0;
+#X connect 10 1 13 0;
+#X connect 11 0 15 0;
+#X connect 12 0 11 0;
+#X connect 15 0 10 0;
+#X connect 18 0 19 0;
+#X connect 20 0 21 0;
+#X connect 21 0 22 0;
