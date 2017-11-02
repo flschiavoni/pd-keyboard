@@ -69,8 +69,12 @@ static void keyboard_play(t_keyboard* x){
             outlet_list(x->x_out, &s_list, 2, a);
         }
         if(x->notes[i] < 0){ // stop play Keyb or mouse
-            if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10)
-                sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #FFFFFF\n", canvas, x, i);
+            if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10){
+                if(x->first_c + i == 60) // Middle C
+                    sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #F0FFFF\n", canvas, x, i);
+                else
+                    sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #FFFFFF\n", canvas, x, i);
+                }
             else
                 sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #000000\n", canvas, x, i);
             t_atom a[2];
