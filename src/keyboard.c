@@ -445,6 +445,30 @@ void keyboard_float(t_keyboard *x, t_floatarg note){
     }
 }
 
+static void keyboard_oct(t_keyboard *x, t_symbol *s, int ac, t_atom* av){
+    float f = 0;
+    if(ac && ((av)->a_type == A_FLOAT))
+        f = atom_getfloat(av++);
+    f = (int)(f);
+    if(f != 0){
+        x->low_c += f;
+        keyboard_erase(x);
+        keyboard_set_properties(x, x->space, x->height, x->octaves, x->low_c, x->keyb_play);
+        keyboard_draw(x);
+    }
+}
+
+static void keyboard_height(t_keyboard *x, t_floatarg f){
+    f = (int)(f);
+    if(f < 10)
+        f = 10;
+    if(x->height != f){
+        keyboard_erase(x);
+        keyboard_set_properties(x, x->space, f, x->octaves, x->low_c, x->keyb_play);
+        keyboard_draw(x);
+    }
+}
+
 static void keyboard_width(t_keyboard *x, t_floatarg f){
     f = (int)(f);
     if(f < 7)
@@ -536,6 +560,8 @@ void keyboard_setup(void){
     class_addfloat(keyboard_class, keyboard_float);
     class_addmethod(keyboard_class, (t_method)keyboard_8ves, gensym("8ves"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_width, gensym("width"), A_DEFFLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_height, gensym("height"), A_DEFFLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_oct, gensym("oct"), A_GIMME, 0);
 // Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, 0); 
