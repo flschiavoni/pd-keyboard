@@ -305,7 +305,7 @@ void keyboard_displace(t_gobj *z, t_glist *glist,int dx, int dy){
         x->x_obj.te_ypix + x->height
         );
 // MOVE the main rectangle
-    sys_vgui(".x%x.c coords %xrr %d %d %d %d\n",
+    sys_vgui(".x%lx.c coords %xrr %d %d %d %d\n",
         canvas, x,
         x->x_obj.te_xpix,
         x->x_obj.te_ypix,
@@ -348,7 +348,7 @@ static void keyboard_select(t_gobj *z, t_glist *glist, int state){
      t_keyboard *x = (t_keyboard *)z;
      t_canvas * canvas = glist_getcanvas(glist);
      if (state) {
-        sys_vgui(".x%x.c create rectangle %d %d %d %d -tags %xSEL -outline blue\n",
+        sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xSEL -outline blue\n",
         canvas,
         x->x_obj.te_xpix,
         x->x_obj.te_ypix,
@@ -357,7 +357,7 @@ static void keyboard_select(t_gobj *z, t_glist *glist, int state){
         x
         );
     }else {
-     sys_vgui(".x%x.c delete %xSEL\n",canvas, x);
+     sys_vgui(".x%lx.c delete %xSEL\n",canvas, x);
     }
 }
 
