@@ -375,7 +375,7 @@ static void keyboard_set_properties(t_keyboard *x, t_floatarg space,
     x->keyb_play = keyb_play;
     x->height = (height < 10) ? 10 : height;
     x->octaves = (octaves < 1) ? 1 : octaves;
-    x->low_c = (low_c >= 0) ? low_c : (low_c >= 8) ? 8 : low_c; // clip C0 to C8
+    x->low_c = (low_c >= 0) ? low_c : (low_c >= 8) ? 8 : low_c; // clip from C0 to C8
     x->first_c = ((int)(x->low_c * 12)) + 12; // Find MIDI Note
     x->space = (space < 7) ? 7 : space; // key width
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
@@ -447,14 +447,22 @@ void keyboard_float(t_keyboard *x, t_floatarg note){
 
 static void keyboard_oct(t_keyboard *x, t_symbol *s, int ac, t_atom* av){
     float f = 0;
+    float target;
     if(ac && ((av)->a_type == A_FLOAT))
         f = atom_getfloat(av++);
     f = (int)(f);
     if(f != 0){
-        x->low_c += f;
-        keyboard_erase(x);
-        keyboard_set_properties(x, x->space, x->height, x->octaves, x->low_c, x->keyb_play);
-        keyboard_draw(x);
+        if(x->low_c + f < 0)
+            target = 0;
+        else if(x->low_c + f > 8)
+            target = 8;
+        else
+            target = x->low_c + f;
+        if(x->low_c != target){
+            keyboard_erase(x);
+            keyboard_set_properties(x, x->space, x->height, x->octaves, target, x->keyb_play);
+            keyboard_draw(x);
+        }
     }
 }
 
