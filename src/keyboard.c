@@ -209,7 +209,7 @@ static void keyboard_erase(t_keyboard *x){
     }
 }
 
-//Draw the keyboard
+// Draw the keyboard
 static void keyboard_draw(t_keyboard *x){
     t_canvas * canvas = x->canvas;
 // Main rectangle
@@ -280,18 +280,15 @@ static void keyboard_draw(t_keyboard *x){
 // MAKE VISIBLE OR INVISIBLE
 static void keyboard_vis(t_gobj *z, t_glist *glist, int vis){
     t_keyboard *x = (t_keyboard *)z;
-
     t_canvas * canvas = glist_getcanvas(glist);
     x->glist = glist;
     x->canvas = canvas;
-
     if(vis == 0){ // INVISIBLE
         keyboard_erase(x);
         return;
     }
-    if(vis == 1){
+    if(vis == 1)
         keyboard_draw(x);
-    }
 }
 
 // DISPLACE IT
@@ -300,15 +297,14 @@ void keyboard_displace(t_gobj *z, t_glist *glist,int dx, int dy){
     t_keyboard *x = (t_keyboard *)z;
     x->x_obj.te_xpix += dx; // x movement
     x->x_obj.te_ypix += dy; // y movement
-
-    sys_vgui(".x%lx.c coords %xSEL %d %d %d %d \n", //MOVE THE BLUE ONE
+    sys_vgui(".x%lx.c coords %xSEL %d %d %d %d \n", // MOVE THE BLUE ONE
         canvas, x,
         x->x_obj.te_xpix,
         x->x_obj.te_ypix,
         x->x_obj.te_xpix + x->width,
         x->x_obj.te_ypix + x->height
         );
-    // MOVE the main rectangle
+// MOVE the main rectangle
     sys_vgui(".x%x.c coords %xrr %d %d %d %d\n",
         canvas, x,
         x->x_obj.te_xpix,
@@ -316,7 +312,7 @@ void keyboard_displace(t_gobj *z, t_glist *glist,int dx, int dy){
         x->x_obj.te_xpix + x->width,
         x->x_obj.te_ypix + x->height
         );
-    // MOVE THE KEYS
+// MOVE THE KEYS
     int i, wcounter, bcounter;
     wcounter = bcounter = 0;
     for(i = 0 ; i < x->octaves * 12 ; i++){
@@ -374,15 +370,14 @@ static void keyboard_delete(t_gobj *z, t_glist *glist){
 /* ------------------------ GUI Behaviour -----------------------------*/
 
 // Set Properties
-static void keyboard_set_properties(t_keyboard *x, t_floatarg space, t_floatarg height,
-                                    t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
+static void keyboard_set_properties(t_keyboard *x, t_floatarg space,
+            t_floatarg height,t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     x->keyb_play = keyb_play;
-    x->height = (height > 10) ? height : 10;
-    x->octaves = (octaves > 1) ? octaves : 1;
-    x->low_c = (low_c >= 0) ? low_c : 0;
-    x->low_c = (low_c <= 8) ? low_c : 8;
-    x->first_c = ((int)(x->low_c * 12)) + 12;
-    x->space = (space > 7) ? space : 7;
+    x->height = (height < 10) ? 10 : height;
+    x->octaves = (octaves < 1) ? 1 : octaves;
+    x->low_c = (low_c >= 0) ? low_c : (low_c >= 8) ? 8 : low_c; // clip C0 to C8
+    x->first_c = ((int)(x->low_c * 12)) + 12; // Find MIDI Note
+    x->space = (space < 7) ? 7 : space; // key width
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
     x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
     int i;
@@ -390,21 +385,23 @@ static void keyboard_set_properties(t_keyboard *x, t_floatarg space, t_floatarg 
         x->notes[i] = 0;
 }
 
+// Keyboard Properties
 void keyboard_properties(t_gobj *z, t_glist *owner){
     t_keyboard *x = (t_keyboard *)z;
     char cmdbuf[256];
     sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d %d\n",
-            (int)x->space,
-            (int)x->height,
-            (int)x->octaves,
-            (int)x->low_c,
-            (int)x->keyb_play);
+        (int)x->space,
+        (int)x->height,
+        (int)x->octaves,
+        (int)x->low_c,
+        (int)x->keyb_play);
     gfxstub_new(&x->x_obj.ob_pd, x, cmdbuf);
 }
 
+// Save Properties
 static void keyboard_save(t_gobj *z, t_binbuf *b){
     t_keyboard *x = (t_keyboard *)z;
-    binbuf_addv(b, "ssiisiiiii",gensym("#X"),gensym("obj"),
+    binbuf_addv(b, "ssiisiiiii", gensym("#X"), gensym("obj"),
                 (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
                 gensym("keyboard"),
                 (t_int)x->space,
@@ -425,9 +422,9 @@ t_widgetbehavior keyboard_widgetbehavior ={
     NULL, //Will use PD default mouse click
 };
 
-// Apply the changes of property windows
+// Apply changes of property windows
 static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
-                           t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
+        t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     keyboard_erase(x);
     keyboard_set_properties(x, space, height, octaves, low_c, keyb_play);
     keyboard_draw(x);
@@ -448,6 +445,17 @@ void keyboard_float(t_keyboard *x, t_floatarg note){
     }
 }
 
+static void keyboard_width(t_keyboard *x, t_floatarg f){
+    f = (int)(f);
+    if(f < 7)
+        f = 7;
+    if(x->space != f){
+        keyboard_erase(x);
+        keyboard_set_properties(x, f, x->height, x->octaves, x->low_c, x->keyb_play);
+        keyboard_draw(x);
+    }
+}
+
 static void keyboard_8ves(t_keyboard *x, t_floatarg f){
     f = (int)(f);
     if(f > 10)
@@ -464,7 +472,7 @@ static void keyboard_8ves(t_keyboard *x, t_floatarg f){
 /* ------------------------ Free / New / Setup ------------------------------*/
 
 // Free
-void keyboard_free(t_keyboard *x) {
+void keyboard_free(t_keyboard *x){
     sys_vgui("event delete <<%x_mousedown>>\n", x);
     sys_vgui("event delete <<%x_mousemotion>>\n", x);
     sys_vgui("event delete <<%x_mouseup>>\n", x);
@@ -522,31 +530,25 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
 }
 
 // Setup
-void keyboard_setup(void) {
-    keyboard_class = class_new(gensym("keyboard"),
-        (t_newmethod) keyboard_new,
-        (t_method) keyboard_free,
-        sizeof (t_keyboard),
-        CLASS_DEFAULT,
-        A_GIMME,
-        0);
+void keyboard_setup(void){
+    keyboard_class = class_new(gensym("keyboard"), (t_newmethod) keyboard_new, (t_method) keyboard_free,
+        sizeof (t_keyboard), CLASS_DEFAULT, A_GIMME, 0);
     class_addfloat(keyboard_class, keyboard_float);
     class_addmethod(keyboard_class, (t_method)keyboard_8ves, gensym("8ves"), A_DEFFLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_width, gensym("width"), A_DEFFLOAT, 0);
 // Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, 0); 
     class_addmethod(keyboard_class, (t_method)keyboard_mousemotion,gensym("_mousemotion"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_keyup,gensym("_kup"), A_FLOAT, 0); 
     class_addmethod(keyboard_class, (t_method)keyboard_keydown,gensym("_kdown"), A_FLOAT, 0);
-
+// Widget
     class_setwidget(keyboard_class, &keyboard_widgetbehavior);
     class_setsavefn(keyboard_class, keyboard_save);
     class_setpropertiesfn(keyboard_class, keyboard_properties);
     class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
-
-// Adjust from Vanilla e Extended
+// Adjust from Vanilla & Extended
     sys_gui(" if { [catch {pd}] } {proc pd {args} {pdsend [join $args " "]}}\n");
-
 // Properties dialog
     sys_gui("proc keyboard_properties {id width height octaves low_c keyb_play} {\n");
     sys_gui("set vid [string trimleft $id .]\n");
@@ -621,7 +623,7 @@ void keyboard_setup(void) {
     sys_gui("global $var_octaves\n");
     sys_gui("global $var_low_c\n");
     sys_gui("global $var_keyb_play\n");
-// Aply function
+// Apply function (again?)
     sys_gui("set cmd [concat $id apply \
         [eval concat $$var_width] \
         [eval concat $$var_height] \
