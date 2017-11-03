@@ -374,11 +374,24 @@ static void keyboard_set_properties(t_keyboard *x, t_floatarg space,
             t_floatarg height,t_floatarg octaves, t_floatarg low_c, t_float keyb_play){
     x->keyb_play = keyb_play;
     x->height = (height < 10) ? 10 : height;
-    x->octaves = (octaves < 1) ? 1 : octaves;
-    x->low_c = (low_c >= 0) ? low_c : (low_c >= 8) ? 8 : low_c; // clip from C0 to C8
-    x->first_c = ((int)(x->low_c * 12)) + 12; // Find MIDI Note
+// clip octaves from 1 to 10
+    if(octaves < 1)
+        octaves = 1;
+    if(octaves > 10)
+        octaves = 10;
+    x->octaves = octaves;
+// clip from C0 to C8
+    if(low_c < 0)
+        low_c = 0;
+    if(low_c > 8)
+        low_c = 8;
+    x->low_c = low_c;
+// space/width
     x->space = (space < 7) ? 7 : space; // key width
     x->width = ((int)(x->space)) * 7 * (int)x->octaves;
+// get first MIDI note
+    x->first_c = ((int)(x->low_c * 12)) + 12;
+// get and clear notes
     x->notes = getbytes(sizeof(t_int) * 12 * x->octaves);
     int i;
     for(i = 0; i < 12 * x->octaves; i++)
