@@ -35,18 +35,9 @@ typedef struct _keyboard{
 static void keyboard_play(t_keyboard* x){
     t_canvas * canvas = x->canvas;
     int i;
+    // first, dispatch note off 
     for(i = 0 ; i < x->octaves * 12; i++){
         short key = i % 12;
-        if(x->notes[i] > 0){ // play Keyb or mouse
-            if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10)
-                sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #9999FF\n", canvas, x, i);
-            else
-                sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #6666FF\n", canvas, x, i);
-            t_atom a[2];
-            SETFLOAT(a, ((int)x->first_c) + i);
-            SETFLOAT(a+1, x->notes[i]);
-            outlet_list(x->x_out, &s_list, 2, a);
-        }
         if(x->notes[i] < 0){ // stop play Keyb or mouse
             if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10){
                 if(x->first_c + i == 60) // Middle C
@@ -62,6 +53,20 @@ static void keyboard_play(t_keyboard* x){
             outlet_list(x->x_out, &s_list, 2, a);
         }
     }
+    // then dispatch note on
+    for(i = 0 ; i < x->octaves * 12; i++){
+        short key = i % 12;
+        if(x->notes[i] > 0){ // play Keyb or mouse
+            if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10)
+                sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #9999FF\n", canvas, x, i);
+            else
+                sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #6666FF\n", canvas, x, i);
+            t_atom a[2];
+            SETFLOAT(a, ((int)x->first_c) + i);
+            SETFLOAT(a+1, x->notes[i]);
+            outlet_list(x->x_out, &s_list, 2, a);
+        }
+    }
 }
 
 /* -------------------- MOUSE Events ----------------------------------*/
@@ -74,26 +79,30 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
         short key = i % 12;
         if(key == 4 || key == 11){
             bcounter++;
-        }
+            }
+        // play the black keys
         if( key == 1 || key == 3 || key ==6 || key == 8 || key == 10){ // Play the blacks
             if(xpix > x->x_obj.te_xpix + ((bcounter + 1) * (int)x->space) - ((int)(0.3f * x->space))
                  && xpix < x->x_obj.te_xpix + ((bcounter + 1) * (int)x->space) + ((int)(0.3f * x->space))
-                 && ypix > x->x_obj.te_ypix
-                 && ypix < x->x_obj.te_ypix + 2 * x->height / 3
-            ){
+//                 && ypix > x->x_obj.te_ypix
+//                 && ypix < x->x_obj.te_ypix + 2 * x->height / 3
+                ){
                 x->notes[i] = event;
                 return i; // Avoid to play the white below
-            }
-        bcounter++;
+                }
+            bcounter++;
+            continue;
+        // play white keys
         }else{
             if(xpix > x->x_obj.te_xpix + wcounter * (int)x->space
                  && xpix < x->x_obj.te_xpix + (wcounter + 1) * (int)x->space
-                 && ypix > x->x_obj.te_ypix
-                 && ypix < x->x_obj.te_ypix + x->height){
+//                 && ypix > x->x_obj.te_ypix
+//                 && ypix < x->x_obj.te_ypix + x->height
+                 ){
                 x->notes[i] = event;
                 return i;
             }
-        wcounter++;
+            wcounter++;
         }
     }
     return -1;
@@ -101,24 +110,23 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
 
 // Mouse press
 static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    // Check if this is the right instance to receive this message
     if ((int)x != (int)id)
         return;
-    if (x->glist->gl_edit) // If edit mode, give up!
+    // If edit mode, give up!
+    if (x->glist->gl_edit)
         return;
-    if((int)xpix < x->x_obj.te_xpix
-       || (int)xpix > x->x_obj.te_xpix + x->width
-       || (int)ypix < x->x_obj.te_ypix
-       || (int)ypix > x->x_obj.te_ypix + x->height)
-            return;
     keyboard_mapclick(x, xpix, ypix, MOUSE_PRESS);
     keyboard_play(x);
 }
 
 // Mouse release
 static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    // Check if this is the right instance to receive this message
     if ((int)x != (int)id)
         return;
-    if (x->glist->gl_edit) // If edit mode, give up!
+    // If edit mode, give up!
+    if (x->glist->gl_edit)
         return;
     int i, play;
     play = 0;
@@ -134,14 +142,17 @@ static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix, t_f
 
 // Mouse Drag event
 static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    // Check if this is the right instance to receive this message
     if ((int)x != (int)id)
         return;
-    if (x->glist->gl_edit) // If edit mode, give up!
+    // If edit mode, give up!
+    if (x->glist->gl_edit)
         return;
     if((int)xpix < x->x_obj.te_xpix
        || (int)xpix > x->x_obj.te_xpix + x->width
-       || (int)ypix < x->x_obj.te_ypix
-       || (int)ypix > x->x_obj.te_ypix + x->height)
+//       || (int)ypix < x->x_obj.te_ypix
+//       || (int)ypix > x->x_obj.te_ypix + x->height
+       )
             return;
     int i,actual = 0, new_drag = 0;
     for(i = 0 ; i < x->octaves * 12; i++){ // find actual key playing;
@@ -450,7 +461,7 @@ t_widgetbehavior keyboard_widgetbehavior ={
     NULL, //Activate will not be used
     keyboard_delete,
     keyboard_vis,
-    NULL, //Will use PD default mouse click
+    NULL, //We can not use it because it does not have press and release
 };
 
 // Apply changes of property windows
