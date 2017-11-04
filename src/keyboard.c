@@ -67,7 +67,9 @@ static void keyboard_play(t_keyboard* x){
 /* -------------------- MOUSE Events ----------------------------------*/
 
 // Mouse release
-static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix){
+static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    if ((t_int)x != id)
+        return;
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
     int i, play;
@@ -116,7 +118,9 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
 }
 
 // Mouse press
-static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
+static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    if ((t_int)x != id)
+        return;
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
     if((int)xpix < x->x_obj.te_xpix
@@ -129,7 +133,9 @@ static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
 }
 
 // Mouse Drag event
-static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix){
+static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    if ((t_int)x != id)
+        return;
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
     if((int)xpix < x->x_obj.te_xpix
@@ -223,36 +229,39 @@ static void keyboard_draw(t_keyboard *x){
         );
     int i, wcounter, bcounter;
     wcounter = bcounter = 0;
-// First draw the white keys to allow the blacks overlay it
+    // First draw the white keys to allow the blacks overlay it
     for(i = 0 ; i < x->octaves * 12 ; i++){
         short key = i % 12;
         if(key != 1 && key != 3 && key !=6 && key != 8 && key != 10){
             if(x->first_c + i == 60){ // Middle C
-                sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xrrk%d -fill #F0FFFF\n",
+                sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags {%xrrk%d %xrr} -fill #F0FFFF\n",
                          canvas,
                          x->x_obj.te_xpix + wcounter * (int)x->space,
                          x->x_obj.te_ypix,
                          x->x_obj.te_xpix + (wcounter + 1) * (int)x->space,
                          x->x_obj.te_ypix + x->height,
                          x,
-                         i
+                         i,
+                         x
                          );
                 wcounter++;
             }
             else{
-                sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xrrk%d -fill #FFFFFF\n",
+                sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags {%xrrk%d %xrr} -fill #FFFFFF\n",
                 canvas,
                 x->x_obj.te_xpix + wcounter * (int)x->space,
                 x->x_obj.te_ypix,
                 x->x_obj.te_xpix + (wcounter + 1) * (int)x->space,
                 x->x_obj.te_ypix + x->height,
                 x,
-                i
+                i,
+                x
                 );
                 wcounter++;
             }
         }
     }
+    // Draw the black keys
     for(i = 0 ; i < x->octaves * 12 ; i++){
         short key = i % 12;
         if(key == 4 || key == 11){
@@ -260,7 +269,6 @@ static void keyboard_draw(t_keyboard *x){
             continue;
         }
         if( key == 1 || key == 3 || key ==6 || key == 8 || key == 10){
-// Draw the black keys
             sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xrrk%d -fill #000000\n",
             canvas,
             x->x_obj.te_xpix + ((bcounter + 1) * (int)x->space) - ((int)(0.3f * x->space)) ,
@@ -287,8 +295,14 @@ static void keyboard_vis(t_gobj *z, t_glist *glist, int vis){
         keyboard_erase(x);
         return;
     }
-    if(vis == 1)
+    if(vis == 1){
         keyboard_draw(x);
+        sys_vgui(".x%lx.c bind %xrr <ButtonPress-1> {\n keyboard_mousepress \"%d\" %%x %%y %%b\n}\n", x->canvas, x, x);
+        sys_vgui(".x%lx.c bind %xrr <ButtonRelease-1> {\n keyboard_mouserelease \"%d\" %%x %%y %%b\n}\n", x->canvas, x, x);
+        sys_vgui(".x%lx.c bind %xrr <B1-Motion> {\n keyboard_mousemotion \"%d\" %%x %%y\n}\n", x->canvas, x, x);
+        sys_vgui("bind .x%lx.c <<%lx_keydown>> {\n keyboard_keydown \"%lx\" %%N\n}\n", x->canvas, x, x);
+        sys_vgui("bind .x%lx.c <<%lx_keyup>> {\n keyboard_keyup \"%lx\" %%N\n}\n", x->canvas, x, x);
+    }
 }
 
 // DISPLACE IT
@@ -414,8 +428,12 @@ void keyboard_properties(t_gobj *z, t_glist *owner){
 // Save Properties
 static void keyboard_save(t_gobj *z, t_binbuf *b){
     t_keyboard *x = (t_keyboard *)z;
-    binbuf_addv(b, "ssiisiiiii", gensym("#X"), gensym("obj"),
-                (t_int)x->x_obj.te_xpix, (t_int)x->x_obj.te_ypix,
+    binbuf_addv(b,
+                "ssiisiiiii",
+                gensym("#X"),
+                gensym("obj"),
+                (t_int)x->x_obj.te_xpix,
+                (t_int)x->x_obj.te_ypix,
                 gensym("keyboard"),
                 (t_int)x->space,
                 (t_int)x->height,
@@ -518,11 +536,6 @@ static void keyboard_8ves(t_keyboard *x, t_floatarg f){
 
 // Free
 void keyboard_free(t_keyboard *x){
-    sys_vgui("event delete <<%x_mousedown>>\n", x);
-    sys_vgui("event delete <<%x_mousemotion>>\n", x);
-    sys_vgui("event delete <<%x_mouseup>>\n", x);
-    sys_vgui("event delete <<%x_keydown>>\n", x);
-    sys_vgui("event delete <<%x_keyup>>\n", x);
     pd_unbind(&x->x_obj.ob_pd, gensym("keyboard"));
     gfxstub_deleteforkey(x);
 }
@@ -549,144 +562,36 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     floatinlet_new(&x->x_obj, &x->velocity_input);
 // Set Parameters
     keyboard_set_properties(x, init_space, init_height, init_8ves, init_low_c, init_computer_play);
-// GUI definitions
+
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
-
-    sys_vgui("event add <<%x_mousedown>> <ButtonPress>\n", x);
-    sys_vgui("proc %x_keyboard_mousepress {x y b} {\n if {$b == 1} {\npd [concat keyboard _mousepress $x $y\\;]\n}}\n", x);
-    sys_vgui("bind all <<%x_mousedown>> {\n %x_keyboard_mousepress %%x %%y %%b\n}\n", x, x);
-
-    sys_vgui("event add <<%x_mouseup>> <ButtonRelease>\n", x);
-    sys_vgui("proc %x_keyboard_mouserelease {x y b} {\n if {$b == 1} {\npd [concat keyboard _mouserelease $x $y\\;]\n}}\n", x);
-    sys_vgui("bind all <<%x_mouseup>> {\n %x_keyboard_mouserelease %%x %%y %%b\n}\n", x, x);
-    
-    sys_vgui("event add <<%x_mousemotion>> <B1-Motion>\n", x);
-    sys_vgui("proc %x_keyboard_mousemotion {x y} { \n pd [concat keyboard _mousemotion $x $y\\;]\n}\n", x);
-    sys_vgui("bind all <<%x_mousemotion>> {\n %x_keyboard_mousemotion %%x %%y\n}\n", x, x);
-
-    sys_vgui("event add <<%x_keydown>> <KeyPress>\n", x);
-    sys_vgui("proc %x_keyboard_keydown {K} {\n pd [concat keyboard _kdown $K\\;]\n}\n", x);
-    sys_vgui("bind all <<%x_keydown>> {\n %x_keyboard_keydown %%N\n}\n", x, x);
-
-    sys_vgui("event add <<%x_keyup>> <KeyRelease>\n", x);
-    sys_vgui("proc %x_keyboard_keyup {K} {\n pd [concat keyboard _kup $K\\;]\n}\n", x);
-    sys_vgui("bind all <<%x_keyup>> {\n %x_keyboard_keyup %%N\n}\n", x, x);
     return (void *) x;
 }
 
 // Setup
 void keyboard_setup(void){
-    keyboard_class = class_new(gensym("keyboard"), (t_newmethod) keyboard_new, (t_method) keyboard_free,
-        sizeof (t_keyboard), CLASS_DEFAULT, A_GIMME, 0);
+    keyboard_class = class_new(gensym("keyboard"),
+                    (t_newmethod) keyboard_new,
+                    (t_method) keyboard_free,
+                    sizeof (t_keyboard),
+                    CLASS_DEFAULT,
+                    A_GIMME,
+                    0);
     class_addfloat(keyboard_class, keyboard_float);
     class_addmethod(keyboard_class, (t_method)keyboard_8ves, gensym("8ves"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_width, gensym("width"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_height, gensym("height"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_oct, gensym("oct"), A_GIMME, 0);
+
 // Methods to receive TCL/TK events
-    class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, 0);
-    class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, 0); 
-    class_addmethod(keyboard_class, (t_method)keyboard_mousemotion,gensym("_mousemotion"), A_FLOAT, A_FLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, A_FLOAT, 0); 
+    class_addmethod(keyboard_class, (t_method)keyboard_mousemotion,gensym("_mousemotion"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_keyup,gensym("_kup"), A_FLOAT, 0); 
     class_addmethod(keyboard_class, (t_method)keyboard_keydown,gensym("_kdown"), A_FLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
+
 // Widget
     class_setwidget(keyboard_class, &keyboard_widgetbehavior);
     class_setsavefn(keyboard_class, keyboard_save);
     class_setpropertiesfn(keyboard_class, keyboard_properties);
-    class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
-// Adjust from Vanilla & Extended
-    sys_gui(" if { [catch {pd}] } {proc pd {args} {pdsend [join $args " "]}}\n");
-// Properties dialog
-    sys_gui("proc keyboard_properties {id width height octaves low_c keyb_play} {\n");
-    sys_gui("set vid [string trimleft $id .]\n");
-    sys_gui("set var_width [concat var_width_$vid]\n");
-    sys_gui("set var_height [concat var_height_$vid]\n");
-    sys_gui("set var_octaves [concat var_octaves_$vid]\n");
-    sys_gui("set var_low_c [concat var_low_c_$vid]\n");
-    sys_gui("set var_keyb_play [concat var_keyb_play_$vid]\n");
-
-    sys_gui("global $var_width\n");
-    sys_gui("global $var_height\n");
-    sys_gui("global $var_octaves\n");
-    sys_gui("global $var_low_c\n");
-    sys_gui("global $var_keyb_play\n");
-
-    sys_gui("set $var_width $width\n");
-    sys_gui("set $var_height $height\n");
-    sys_gui("set $var_octaves $octaves\n");
-    sys_gui("set $var_low_c $low_c\n");
-    sys_gui("set $var_keyb_play $keyb_play\n");
-
-    sys_gui("toplevel $id\n");
-    sys_gui("wm title $id {Keyboard}\n");
-    sys_gui("wm protocol $id WM_DELETE_WINDOW [concat keyboard_cancel $id]\n");
-
-    sys_gui("label $id.label -text {Keyboard}\n");
-    sys_gui("pack $id.label -side top\n");
-
-    sys_gui("frame $id.size\n");
-    sys_gui("pack $id.size -side top\n");
-    sys_gui("label $id.size.lwidth -text \"Key Width:\"\n");
-    sys_gui("entry $id.size.width -textvariable $var_width -width 7\n");
-    sys_gui("label $id.size.lheight -text \"Height:\"\n");
-    sys_gui("entry $id.size.height -textvariable $var_height -width 7\n");
-    sys_gui("pack $id.size.lwidth $id.size.width $id.size.lheight $id.size.height -side left\n");
-
-    sys_gui("frame $id.notes\n");
-    sys_gui("pack $id.notes -side top\n");
-    sys_gui("label $id.notes.loctaves -text \"Octaves:\"\n");
-    sys_gui("entry $id.notes.octaves -textvariable $var_octaves -width 7\n");
-    sys_gui("label $id.notes.llow_c -text \"Low C:\"\n");
-    sys_gui("entry $id.notes.low_c -textvariable $var_low_c -width 7\n");
-    sys_gui("pack $id.notes.loctaves $id.notes.octaves $id.notes.llow_c $id.notes.low_c -side left\n");
-
-    sys_gui("frame $id.checkframe\n");
-    sys_gui("pack $id.checkframe -side top\n");
-    sys_gui("checkbutton $id.checkframe.play -text \"Play with computer Keyboard?\"  -variable $var_keyb_play\n");
-    sys_gui("pack $id.checkframe.play -side left\n");
-
-    sys_gui("frame $id.buttonframe\n");
-    sys_gui("pack $id.buttonframe -side bottom -fill x -pady 2m\n");
-    sys_gui("button $id.buttonframe.cancel -text {Cancel} -command \"keyboard_cancel $id\"\n");
-    sys_gui("button $id.buttonframe.apply -text {Apply} -command \"keyboard_apply $id\"\n");
-    sys_gui("button $id.buttonframe.ok -text {OK} -command \"keyboard_ok $id\"\n");
-    sys_gui("pack $id.buttonframe.cancel -side left -expand 1\n");
-    sys_gui("pack $id.buttonframe.apply -side left -expand 1\n");
-    sys_gui("pack $id.buttonframe.ok -side left -expand 1\n");
-
-    sys_gui("focus $id.size.width\n");
-    sys_gui("}\n");
-// Apply function
-    sys_gui("proc keyboard_apply {id} {\n");
-    sys_gui("set vid [string trimleft $id .]\n");
-    sys_gui("set var_width [concat var_width_$vid]\n");
-    sys_gui("set var_height [concat var_height_$vid]\n");
-    sys_gui("set var_octaves [concat var_octaves_$vid]\n");
-    sys_gui("set var_low_c [concat var_low_c_$vid]\n");
-    sys_gui("set var_keyb_play [concat var_keyb_play_$vid]\n");
-
-    sys_gui("global $var_width\n");
-    sys_gui("global $var_height\n");
-    sys_gui("global $var_octaves\n");
-    sys_gui("global $var_low_c\n");
-    sys_gui("global $var_keyb_play\n");
-// Apply function (again?)
-    sys_gui("set cmd [concat $id apply \
-        [eval concat $$var_width] \
-        [eval concat $$var_height] \
-        [eval concat $$var_octaves] \
-        [eval concat $$var_low_c] \
-        [eval concat $$var_keyb_play] \\;]\n");
-    sys_gui("pd $cmd\n");
-    sys_gui("}\n");
-// Cancel function
-    sys_gui("proc keyboard_cancel {id} {\n");
-    sys_gui("set cmd [concat $id cancel \\;]\n");
-    sys_gui("pd $cmd\n");
-    sys_gui("}\n");
-// OK function
-    sys_gui("proc keyboard_ok {id} {\n");
-    sys_gui("keyboard_apply $id\n");
-    sys_gui("keyboard_cancel $id\n");
-    sys_gui("}\n");
 }
