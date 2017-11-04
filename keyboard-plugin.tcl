@@ -99,13 +99,13 @@ proc keyboard_properties {id width height octaves low_c keyb_play} {
     pack $id.notes -side top
     label $id.notes.loctaves -text "Octaves:"
     entry $id.notes.octaves -textvariable $var_octaves -width 7
-    label $id.notes.llow_c -text "Low C:"
+    label $id.notes.llow_c -text "Low C#:"
     entry $id.notes.low_c -textvariable $var_low_c -width 7
     pack $id.notes.loctaves $id.notes.octaves $id.notes.llow_c $id.notes.low_c -side left
 
     frame $id.checkframe
     pack $id.checkframe -side top
-    checkbutton $id.checkframe.play -text "Play with computer Keyboard?"  -variable $var_keyb_play
+    checkbutton $id.checkframe.play -text "Enable computer Keyboard"  -variable $var_keyb_play
     pack $id.checkframe.play -side left
 
     frame $id.buttonframe

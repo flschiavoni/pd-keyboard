@@ -1,0 +1,28 @@
+#N canvas 591 142 882 633 16;
+#X obj 220 443 else/plateverb~ 50 0.6 0.25 0.8 0.8, f 18;
+#X obj 266 517 out~;
+#X obj 61 222 keyboard 16 80 3 2 0;
+#X obj 181 19 tgl 15 0 empty empty empty 17 7 0 10 -228856 -1 -1 1
+1;
+#X obj 61 73 metro;
+#X obj 61 180 makenote;
+#X obj 61 103 expr random(36 \, 48) \; random(60 \, 127) \; random(1800
+\, 3500);
+#X obj 131 73 * 1.5;
+#X obj 328 337 display;
+#X obj 220 397 polifonia voice3 4 1;
+#X obj 51 362 display;
+#X connect 0 0 1 0;
+#X connect 0 1 1 1;
+#X connect 2 0 9 0;
+#X connect 2 0 10 0;
+#X connect 3 0 4 0;
+#X connect 4 0 6 0;
+#X connect 5 0 2 0;
+#X connect 5 1 2 1;
+#X connect 6 0 5 0;
+#X connect 6 1 5 1;
+#X connect 6 2 5 2;
+#X connect 6 2 7 0;
+#X connect 7 0 4 1;
+#X connect 9 0 0 0;
