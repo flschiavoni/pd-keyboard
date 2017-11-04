@@ -66,24 +66,6 @@ static void keyboard_play(t_keyboard* x){
 
 /* -------------------- MOUSE Events ----------------------------------*/
 
-// Mouse release
-static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
-    if ((t_int)x != id)
-        return;
-    if (x->glist->gl_edit) // If edit mode, give up!
-        return;
-    int i, play;
-    play = 0;
-    for(i = 0 ; i < x->octaves * 12; i++){
-        if(x->notes[i] == MOUSE_PRESS){
-            x->notes[i] = MOUSE_RELEASE;
-            play = 1;
-            }
-    }
-    if(play == 1)
-        keyboard_play(x);
-}
-
 //Map mouse event position
 static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int event){
     short i, wcounter, bcounter;
@@ -119,7 +101,7 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
 
 // Mouse press
 static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
-    if ((t_int)x != id)
+    if ((int)x != (int)id)
         return;
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
@@ -132,9 +114,27 @@ static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix, t_flo
     keyboard_play(x);
 }
 
+// Mouse release
+static void keyboard_mouserelease(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
+    if ((int)x != (int)id)
+        return;
+    if (x->glist->gl_edit) // If edit mode, give up!
+        return;
+    int i, play;
+    play = 0;
+    for(i = 0 ; i < x->octaves * 12; i++){
+        if(x->notes[i] == MOUSE_PRESS){
+            x->notes[i] = MOUSE_RELEASE;
+            play = 1;
+            }
+    }
+    if(play == 1)
+        keyboard_play(x);
+}
+
 // Mouse Drag event
 static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix, t_float id){
-    if ((t_int)x != id)
+    if ((int)x != (int)id)
         return;
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
@@ -300,8 +300,8 @@ static void keyboard_vis(t_gobj *z, t_glist *glist, int vis){
         sys_vgui(".x%lx.c bind %xrr <ButtonPress-1> {\n keyboard_mousepress \"%d\" %%x %%y %%b\n}\n", x->canvas, x, x);
         sys_vgui(".x%lx.c bind %xrr <ButtonRelease-1> {\n keyboard_mouserelease \"%d\" %%x %%y %%b\n}\n", x->canvas, x, x);
         sys_vgui(".x%lx.c bind %xrr <B1-Motion> {\n keyboard_mousemotion \"%d\" %%x %%y\n}\n", x->canvas, x, x);
-        sys_vgui("bind .x%lx.c <<%lx_keydown>> {\n keyboard_keydown \"%lx\" %%N\n}\n", x->canvas, x, x);
-        sys_vgui("bind .x%lx.c <<%lx_keyup>> {\n keyboard_keyup \"%lx\" %%N\n}\n", x->canvas, x, x);
+        sys_vgui(".x%lx.c bind %xrr <KeyPress> {\n keyboard_keydown \"%d\" %%N\n}\n", x->canvas, x, x);
+        sys_vgui(".x%lx.c bind %xrr <KeyRelease> {\n keyboard_keyup \"%d\" %%N\n}\n", x->canvas, x, x);
     }
 }
 

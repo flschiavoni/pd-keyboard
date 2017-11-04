@@ -24,6 +24,7 @@ proc keyboard_keydown {id K} {
 }
 
 proc keyboard_keyup {id K} {
+    puts $id
     pd [concat keyboard _kup $K \;]
 }
 
