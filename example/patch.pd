@@ -1,28 +1,39 @@
-#N canvas 591 142 882 633 16;
-#X obj 220 443 else/plateverb~ 50 0.6 0.25 0.8 0.8, f 18;
-#X obj 266 517 out~;
-#X obj 61 222 keyboard 16 80 3 2 0;
-#X obj 181 19 tgl 15 0 empty empty empty 17 7 0 10 -228856 -1 -1 1
+#N canvas 698 73 688 574 16;
+#X obj 146 471 print key;
+#X obj 126 46 tgl 15 0 empty empty empty 17 7 0 10 -228856 -1 -1 0
 1;
-#X obj 61 73 metro;
-#X obj 61 180 makenote;
-#X obj 61 103 expr random(36 \, 48) \; random(60 \, 127) \; random(1800
-\, 3500);
-#X obj 131 73 * 1.5;
-#X obj 328 337 display;
-#X obj 220 397 polifonia voice3 4 1;
-#X obj 51 362 display;
-#X connect 0 0 1 0;
-#X connect 0 1 1 1;
-#X connect 2 0 9 0;
-#X connect 2 0 10 0;
-#X connect 3 0 4 0;
-#X connect 4 0 6 0;
-#X connect 5 0 2 0;
-#X connect 5 1 2 1;
-#X connect 6 0 5 0;
-#X connect 6 1 5 1;
-#X connect 6 2 5 2;
-#X connect 6 2 7 0;
-#X connect 7 0 4 1;
-#X connect 9 0 0 0;
+#X obj 134 224 pack;
+#X obj 134 254 t l l;
+#X obj 211 233 print makenote;
+#X obj 120 74 metro 500;
+#X obj 120 181 makenote 100 1000;
+#X obj 122 123 expr random(36 \, 72);
+#X obj 410 235 makenote 100 1000;
+#X msg 409 173 60 100;
+#X obj 155 364 keyboard 16 80 4 3 0;
+#X obj 410 92 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X obj 486 134 delay 500;
+#X msg 511 181 60 127;
+#X obj 435 270 print;
+#X obj 587 181 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 389 314 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X connect 1 0 5 0;
+#X connect 2 0 3 0;
+#X connect 3 1 4 0;
+#X connect 5 0 7 0;
+#X connect 6 0 2 0;
+#X connect 6 1 2 1;
+#X connect 7 0 6 0;
+#X connect 8 0 10 0;
+#X connect 8 0 16 0;
+#X connect 8 1 10 1;
+#X connect 9 0 8 0;
+#X connect 10 0 0 0;
+#X connect 11 0 9 0;
+#X connect 11 0 12 0;
+#X connect 12 0 13 0;
+#X connect 12 0 15 0;
+#X connect 13 0 8 0;

@@ -475,16 +475,41 @@ static void keyboard_apply(t_keyboard *x, t_floatarg space, t_floatarg height,
 /* ------------------------- Methods ------------------------------*/
 
 void keyboard_float(t_keyboard *x, t_floatarg note){
-    if(note < x->first_c || note > x->first_c + (x->octaves * 12)){
-        t_atom a[2];
-        SETFLOAT(a, note);
-        SETFLOAT(a+1, x->velocity_input);
-        outlet_list(x->x_out, &s_list, 2, a); // if not part of Keyboard, let it through
-    }
-    else{ // if part of Keyboard, send it to the GUI
-        x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
-        keyboard_play(x);
-    }
+    t_atom a[2];
+    SETFLOAT(a, note);
+    SETFLOAT(a+1, x->velocity_input);
+    outlet_list(x->x_out, &s_list, 2, a);
+    
+    if(note > x->first_c && note < x->first_c + (x->octaves * 12)){
+            x->notes[(int)(note - x->first_c)] = (x->velocity_input > 0) ? x->velocity_input : KEY_UP;
+            t_canvas * canvas = x->canvas;
+            int i;
+// first, dispatch note off
+            for(i = 0 ; i < x->octaves * 12; i++){
+                short key = i % 12;
+                if(x->notes[i] < 0){ // stop play Keyb or mouse
+                    if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10){
+                        if(x->first_c + i == 60) // Middle C
+                            sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #F0FFFF\n", canvas, x, i);
+                        else
+                            sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #FFFFFF\n", canvas, x, i);
+                    }
+                    else
+                        sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #000000\n", canvas, x, i);
+                    t_atom a[2];
+                }
+            }
+// then dispatch note on
+            for(i = 0 ; i < x->octaves * 12; i++){
+                short key = i % 12;
+                if(x->notes[i] > 0){ // play Keyb or mouse
+                    if( key != 1 && key != 3 && key !=6 && key != 8 && key != 10)
+                        sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #9999FF\n", canvas, x, i);
+                    else
+                        sys_vgui(".x%lx.c itemconfigure %xrrk%d -fill #6666FF\n", canvas, x, i);
+                }
+            }
+        }
 }
 
 static void keyboard_oct(t_keyboard *x, t_symbol *s, int ac, t_atom* av){
