@@ -1,4 +1,4 @@
-#N canvas 391 45 1401 704 10;
+#N canvas 279 45 1401 704 10;
 #X text 676 394 KNOW BUG: The computer keyboard buffer is not disabled.
 \; It can creates a serie of notes on and off if a key is \; pressed
 and not released.;
@@ -27,7 +27,7 @@ and not released.;
 #X msg 485 433 bottom-C;
 #X text 674 349 The width and height may be ajusted automatically \;
 The C value are clipped from 0 to 8;
-#X obj 188 235 keyboard 18 51 3 3 0;
+#X obj 188 235 keyboard 18 51 3 2 0;
 #X text 676 449 color intensity according to velocity;
 #X text 677 482 set velocity output;
 #X text 678 511 set starting note (F4 \, Bb3 \, G#5 \, whatever);
@@ -55,6 +55,7 @@ keys;
 #X text 666 623 set octave+/- in keyboard with arrows;
 #X msg 205 191 8ves 3;
 #X obj 228 318 print;
+#X msg 306 341 lowc 2;
 #X connect 6 0 9 0;
 #X connect 6 0 24 0;
 #X connect 6 1 8 0;
@@ -82,3 +83,4 @@ keys;
 #X connect 44 0 41 1;
 #X connect 45 0 24 0;
 #X connect 47 0 24 0;
+#X connect 49 0 24 0;

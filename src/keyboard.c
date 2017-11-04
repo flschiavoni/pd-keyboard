@@ -568,6 +568,19 @@ static void keyboard_8ves(t_keyboard *x, t_floatarg f){
     }
 }
 
+static void keyboard_low_c(t_keyboard *x, t_floatarg f){
+    f = (int)(f);
+    if(f > 8)
+        f = 8;
+    if(f < 0)
+        f = 0;
+    if(x->low_c != f){
+        keyboard_erase(x);
+        keyboard_set_properties(x, x->space, x->height, x->octaves, f, x->keyb_play);
+        keyboard_draw(x);
+    }
+}
+
 /* ------------------------ Free / New / Setup ------------------------------*/
 
 // Free
@@ -617,6 +630,7 @@ void keyboard_setup(void){
     class_addmethod(keyboard_class, (t_method)keyboard_width, gensym("width"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_height, gensym("height"), A_DEFFLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_oct, gensym("oct"), A_GIMME, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_low_c, gensym("lowc"), A_DEFFLOAT, 0);
 
 // Methods to receive TCL/TK events
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
