@@ -386,7 +386,7 @@ static void keyboard_set_properties(t_keyboard *x, t_floatarg space,
 void keyboard_properties(t_gobj *z, t_glist *owner){
     t_keyboard *x = (t_keyboard *)z;
     char cmdbuf[256];
-    sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d %d\n",
+    sprintf(cmdbuf, "keyboard_properties %%s %d %d %d %d\n",
         (int)x->space,
         (int)x->height,
         (int)x->octaves,
@@ -398,7 +398,7 @@ void keyboard_properties(t_gobj *z, t_glist *owner){
 static void keyboard_save(t_gobj *z, t_binbuf *b){
     t_keyboard *x = (t_keyboard *)z;
     binbuf_addv(b,
-                "ssiisiiiii",
+                "ssiisiiii",
                 gensym("#X"),
                 gensym("obj"),
                 (t_int)x->x_obj.te_xpix,
@@ -590,7 +590,7 @@ void keyboard_setup(void){
     class_addmethod(keyboard_class, (t_method)keyboard_mousepress,gensym("_mousepress"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
     class_addmethod(keyboard_class, (t_method)keyboard_mouserelease,gensym("_mouserelease"), A_FLOAT, A_FLOAT, A_FLOAT, 0); 
     class_addmethod(keyboard_class, (t_method)keyboard_mousemotion,gensym("_mousemotion"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
-    class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
+    class_addmethod(keyboard_class, (t_method)keyboard_apply, gensym("apply"), A_FLOAT, A_FLOAT, A_FLOAT, A_FLOAT, 0);
 
 // Widget
     class_setwidget(keyboard_class, &keyboard_widgetbehavior);
