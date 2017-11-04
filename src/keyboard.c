@@ -119,8 +119,8 @@ static int keyboard_mapclick(t_keyboard* x, t_float xpix, t_float ypix, t_int ev
 static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
-    if((int)xpix < x->x_obj.te_xpix + 40
-       || (int)xpix > x->x_obj.te_xpix + x->width + 40
+    if((int)xpix < x->x_obj.te_xpix
+       || (int)xpix > x->x_obj.te_xpix + x->width
        || (int)ypix < x->x_obj.te_ypix
        || (int)ypix > x->x_obj.te_ypix + x->height)
             return;
@@ -132,8 +132,8 @@ static void keyboard_mousepress(t_keyboard* x, t_float xpix, t_float ypix){
 static void keyboard_mousemotion(t_keyboard* x, t_float xpix, t_float ypix){
     if (x->glist->gl_edit) // If edit mode, give up!
         return;
-    if((int)xpix < x->x_obj.te_xpix + 40
-       || (int)xpix > x->x_obj.te_xpix + x->width + 40
+    if((int)xpix < x->x_obj.te_xpix
+       || (int)xpix > x->x_obj.te_xpix + x->width
        || (int)ypix < x->x_obj.te_ypix
        || (int)ypix > x->x_obj.te_ypix + x->height)
             return;
@@ -551,11 +551,11 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     keyboard_set_properties(x, init_space, init_height, init_8ves, init_low_c, init_computer_play);
 // GUI definitions
     pd_bind(&x->x_obj.ob_pd, gensym("keyboard"));
-    
+
     sys_vgui("event add <<%x_mousedown>> <ButtonPress>\n", x);
     sys_vgui("proc %x_keyboard_mousepress {x y b} {\n if {$b == 1} {\npd [concat keyboard _mousepress $x $y\\;]\n}}\n", x);
     sys_vgui("bind all <<%x_mousedown>> {\n %x_keyboard_mousepress %%x %%y %%b\n}\n", x, x);
-    
+
     sys_vgui("event add <<%x_mouseup>> <ButtonRelease>\n", x);
     sys_vgui("proc %x_keyboard_mouserelease {x y b} {\n if {$b == 1} {\npd [concat keyboard _mouserelease $x $y\\;]\n}}\n", x);
     sys_vgui("bind all <<%x_mouseup>> {\n %x_keyboard_mouserelease %%x %%y %%b\n}\n", x, x);
@@ -563,11 +563,11 @@ void * keyboard_new(t_symbol *selector, int ac, t_atom* av){
     sys_vgui("event add <<%x_mousemotion>> <B1-Motion>\n", x);
     sys_vgui("proc %x_keyboard_mousemotion {x y} { \n pd [concat keyboard _mousemotion $x $y\\;]\n}\n", x);
     sys_vgui("bind all <<%x_mousemotion>> {\n %x_keyboard_mousemotion %%x %%y\n}\n", x, x);
-    
+
     sys_vgui("event add <<%x_keydown>> <KeyPress>\n", x);
     sys_vgui("proc %x_keyboard_keydown {K} {\n pd [concat keyboard _kdown $K\\;]\n}\n", x);
     sys_vgui("bind all <<%x_keydown>> {\n %x_keyboard_keydown %%N\n}\n", x, x);
-    
+
     sys_vgui("event add <<%x_keyup>> <KeyRelease>\n", x);
     sys_vgui("proc %x_keyboard_keyup {K} {\n pd [concat keyboard _kup $K\\;]\n}\n", x);
     sys_vgui("bind all <<%x_keyup>> {\n %x_keyboard_keyup %%N\n}\n", x, x);
