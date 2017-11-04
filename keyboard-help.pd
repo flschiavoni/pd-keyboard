@@ -21,7 +21,7 @@
 #X obj 167 373 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10
 -228856 -1 -1 0 256;
 #X obj 62 373 nbx 5 14 -1e+37 1e+37 0 0 empty empty empty 0 -8 0 10
--228856 -1 -1 62 256;
+-228856 -1 -1 0 256;
 #X text 58 390 MIDI Note;
 #X text 166 389 Velocity;
 #X obj 157 147 tgl 15 0 empty empty empty 17 7 0 10 -228856 -1 -1 0
@@ -48,7 +48,7 @@
 \; - The upper case keys: ZSXDCVGBHNJM play the second octave;
 #X text 66 38 If the computer input is enabled (as in below) \, then:
 ;
-#X obj 38 123 else/keyboardi 16 80 4 3 1;
+#X obj 38 123 keyboard 16 80 4 3 1;
 #X restore 410 382 pd computer input;
 #X obj 305 5 cnv 15 250 40 empty empty empty 12 13 0 18 -128992 -233080
 0;

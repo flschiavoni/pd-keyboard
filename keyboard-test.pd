@@ -1,4 +1,4 @@
-#N canvas 279 212 1401 704 10;
+#N canvas 200 124 1401 704 10;
 #X text 676 394 KNOW BUG: The computer keyboard buffer is not disabled.
 \; It can creates a serie of notes on and off if a key is \; pressed
 and not released.;
