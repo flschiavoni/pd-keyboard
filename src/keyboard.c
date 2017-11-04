@@ -240,14 +240,15 @@ static void keyboard_draw(t_keyboard *x){
             continue;
         }
         if( key == 1 || key == 3 || key ==6 || key == 8 || key == 10){
-            sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags %xrrk%d -fill #000000\n",
+            sys_vgui(".x%lx.c create rectangle %d %d %d %d -tags {%xrrk%d %xrr} -fill #000000\n",
             canvas,
             x->x_obj.te_xpix + ((bcounter + 1) * (int)x->space) - ((int)(0.3f * x->space)) ,
             x->x_obj.te_ypix,
             x->x_obj.te_xpix + ((bcounter + 1) * (int)x->space) + ((int)(0.3f * x->space)) ,
             x->x_obj.te_ypix + 2 * x->height / 3,
             x,
-            i
+            i,
+            x
             );
             bcounter++;
         }
